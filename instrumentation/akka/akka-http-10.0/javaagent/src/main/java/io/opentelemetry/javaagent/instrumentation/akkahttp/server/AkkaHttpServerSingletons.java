@@ -7,13 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
+import akka.http.scaladsl.server.PathMatcher;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
 
 public final class AkkaHttpServerSingletons {
 
   private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
+  public static final VirtualField<PathMatcher<?>, String> PREFIX =
+      VirtualField.find(PathMatcher.class, String.class);
 
   static {
     INSTRUMENTER =

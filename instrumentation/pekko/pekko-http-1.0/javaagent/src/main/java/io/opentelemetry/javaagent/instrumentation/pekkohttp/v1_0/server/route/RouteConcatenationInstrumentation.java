@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import org.apache.pekko.http.scaladsl.server.RequestContext;
+import org.apache.pekko.http.scaladsl.server.RouteResult;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -15,8 +17,6 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.pekko.http.scaladsl.server.RequestContext;
-import org.apache.pekko.http.scaladsl.server.RouteResult;
 import scala.Function1;
 import scala.concurrent.Future;
 

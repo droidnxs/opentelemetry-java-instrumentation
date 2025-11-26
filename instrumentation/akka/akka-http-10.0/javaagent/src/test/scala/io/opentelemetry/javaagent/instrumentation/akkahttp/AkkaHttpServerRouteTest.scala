@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Directives.{
   IntNumber,
   complete,
@@ -14,7 +15,9 @@ import akka.http.scaladsl.server.Directives.{
   path,
   pathEndOrSingleSlash,
   pathPrefix,
-  pathSingleSlash
+  pathSingleSlash,
+  JavaUUID,
+  Segment
 }
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
@@ -22,10 +25,7 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.testing.internal.armeria.client.WebClient
-import io.opentelemetry.testing.internal.armeria.common.{
-  AggregatedHttpRequest,
-  HttpMethod
-}
+import io.opentelemetry.testing.internal.armeria.common.{AggregatedHttpRequest, HttpMethod}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{AfterAll, Test, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -77,6 +77,51 @@ class AkkaHttpServerRouteTest {
     )
 
     test(route, "/test/1", "GET /test/*")
+  }
+
+  @Test def testRouteWithUUID(): Unit = {
+    val route =
+      pathPrefix("foo") {
+        pathPrefix("api") {
+          pathPrefix("v2") {
+            pathPrefix("bar") {
+                path(JavaUUID) { _ =>
+                  complete("ok")
+                }
+            }
+          }
+        }
+      }
+
+    test(
+      route,
+      "/foo/api/v2/bar/5bb7c7d8-0128-4349-86af-fe718f4f8059",
+      "GET /foo/api/v2/bar/*"
+    )
+  }
+
+  @Test def testRouteWithSegment(): Unit = {
+    val route =
+      pathPrefix("api") {
+        pathPrefix("v2") {
+          pathPrefix("orders") {
+            path(Segment) { _ =>
+              complete("ok")
+            }
+          }
+        }
+      }
+
+    test(route, "/api/v2/orders/order123", "GET /api/v2/orders/*")
+  }
+
+  @Test def testRouteWithSubSegment(): Unit = {
+    val route =
+      pathPrefix("api" / "v2" /  "orders" / Segment / "status") { _ =>
+        complete("ok")
+      }
+
+    test(route, "/api/v2/orders/order123/status", "GET /api/v2/orders/*/status")
   }
 
   def test(route: Route, path: String, spanName: String): Unit = {
